@@ -11,3 +11,8 @@ type send_musica struct {
 	Artista string `json:"artista"`;
 	Caminho string `json:"path"`;
 }
+
+type playlist struct {
+	Nome string  `json: "nome`
+	Musicas []string `json: "musicas"`
+}

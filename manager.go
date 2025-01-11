@@ -90,6 +90,7 @@ func (m *Manager) listMusic(w http.ResponseWriter, r *http.Request)  {
 
 }
 
+
 func (m *Manager) uploadMusic(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1 << 30)
 
@@ -154,6 +155,7 @@ func (m *Manager) streamMusic(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
+	log.Println(r.FormValue("musica"))
 	var path string
 	path_row := m.db.QueryRow(fmt.Sprintf("SELECT caminho FROM musica WHERE '%s' = nome", r.FormValue("musica")))
 	path_row.Scan(&path)
@@ -184,4 +186,31 @@ func (m *Manager) streamMusic(w http.ResponseWriter, r *http.Request) {
 
 		w.Write(buffer[:n])
 	}
+}
+
+func (m *Manager) addPlaylist(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Content-Type") != "application/json" {
+		http.Error(w, "Content type must be application/json", http.StatusUnsupportedMediaType)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	var playlist playlist
+
+	err = json.Unmarshal(body, &playlist)
+	if err!=nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Received Playlist: %+v\n", playlist)
+	log.Printf("Parsed Playlist: %+v\n", playlist)
+	
+	
 }

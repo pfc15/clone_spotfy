@@ -12,6 +12,7 @@ func main(){
 	http.HandleFunc("/list", manager.listMusic)
 	http.HandleFunc("/uploadMusic", manager.uploadMusic)
 	http.HandleFunc("/stream", manager.streamMusic)
+	http.HandleFunc("/addPlaylist", manager.addPlaylist)
 
 	port := ":8080"
 	err := http.ListenAndServe(port, nil)
