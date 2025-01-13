@@ -208,6 +208,14 @@ func (m *Manager) addPlaylist(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
+
+	m.db.Exec(fmt.Sprintf("INSERT INTO playlist(nome) VALUES ('%s');", playlist.Nome))
+
+
+	for _, value := range playlist.Musicas {
+		m.db.Exec(fmt.Sprintf("INSERT INTO possui_musica VALUES ('%s', '%s')",playlist.Nome, value))
+	}
+	
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Received Playlist: %+v\n", playlist)
 	log.Printf("Parsed Playlist: %+v\n", playlist)
