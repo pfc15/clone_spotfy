@@ -11,6 +11,7 @@ func main(){
 	http.Handle("/", http.FileServer(http.Dir("./front/index")));
 	http.HandleFunc("/list", manager.listMusic)
 	http.HandleFunc("/uploadMusic", manager.uploadMusic)
+	http.HandleFunc("/addMusic", manager.getMusic)
 	http.HandleFunc("/stream", manager.streamMusic)
 	http.HandleFunc("/addPlaylist", manager.addPlaylist)
 

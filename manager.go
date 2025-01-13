@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"os"
+	"os/exec"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -114,8 +115,9 @@ func (m *Manager) uploadMusic(w http.ResponseWriter, r *http.Request) {
 	if os.IsNotExist(err) {
 		os.Mkdir(dirpath, os.ModePerm)
 	}
+	os.Mkdir(dirpath+r.FormValue("nome"), os.ModePerm)
 
-	destino, err := os.Create( dirpath +"/" + header.Filename)
+	destino, err := os.Create( dirpath +"/"+r.FormValue("nome") + header.Filename)
 	if err != nil {
 		http.Error(w, "unable to save file", http.StatusInternalServerError)
 		log.Println("file Create error: ", err)
@@ -131,7 +133,7 @@ func (m *Manager) uploadMusic(w http.ResponseWriter, r *http.Request) {
 	nova_musica := musica{
 		nome: r.FormValue("nome"),
 		artista: r.FormValue("artista"),
-		path: fmt.Sprintf("./musicas/%s/%s", r.FormValue("artista"),header.Filename),
+		path: fmt.Sprintf("./musicas/%s/%s/%s", r.FormValue("artista"),r.FormValue("nome"),header.Filename),
 	}
 	
 
@@ -148,6 +150,37 @@ func (m *Manager) uploadMusic(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "File %s uploaded successfully!", header.Filename)
+}
+
+
+func (m *Manager) getMusic(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm();err!=nil {
+		http.Error(w, "erro na leitura de formulário", http.StatusBadRequest)
+		return
+	}
+
+	url := r.FormValue("url")
+	caminho := "./musicas/" + r.FormValue("artista") + "/"+r.FormValue("nome")
+	nome := r.FormValue("nome")
+	dirpath :="./musicas/" + r.FormValue("artista")
+
+	_ , err := os.Stat(dirpath)
+	if os.IsNotExist(err) {
+		os.Mkdir(dirpath, os.ModePerm)
+	}
+
+	cmdStruct := exec.Command("/bin/bash","/home/pfc15/Documents/aleatorio/go/spotgo-backend/dowload.sh", caminho ,url, nome)
+	out,err := cmdStruct.Output()
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "erro executando script", http.StatusInternalServerError)
+		return
+	}
+	log.Println(out)
+
+	m.db.Exec(fmt.Sprintf("INSERT INTO musica(nome, artista, caminho) VALUES ('%s', '%s', '%s');", nome, r.FormValue("artista"), caminho+nome))
+
+	w.WriteHeader(http.StatusAccepted)
 }
 
 func (m *Manager) streamMusic(w http.ResponseWriter, r *http.Request) {
@@ -219,6 +252,4 @@ func (m *Manager) addPlaylist(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Received Playlist: %+v\n", playlist)
 	log.Printf("Parsed Playlist: %+v\n", playlist)
-	
-	
 }

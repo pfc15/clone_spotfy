@@ -16,3 +16,4 @@ type playlist struct {
 	Nome string  `json: "nome`
 	Musicas []string `json: "musicas"`
 }
+
